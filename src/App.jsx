@@ -10,7 +10,7 @@ const App = () => {
   // Initalize editionDrop
   const editionDrop = useEditionDrop("0x2E25f3157043E011400eEe7269C01014e13D51DC");
   // Initalize Token
-  const token = useToken("0xBaeEcc5BAD9Fe7AcC4E1CF5E081435f9156a8cAF");
+  const token = useToken("0xBEdAF217355Be9bAb30283DC60Cc88A58366ADc6");
   // State variable to check if user has the NFT;
   const [hasClaimedNFT, setHasClaimedNFT] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -87,7 +87,7 @@ const App = () => {
     const getAllBalances = async () => {
       try {
         const amounts = await token.history.getAllHolderBalances();
-        setMemberTokenAmounts("Amounts", amounts);
+        setMemberTokenAmounts(amounts);
       } catch (err) {
         console.error("failed to get member balances", err);
       }
