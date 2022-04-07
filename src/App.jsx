@@ -1,5 +1,5 @@
-import { useAddress, useMetamask, useEditionDrop } from '@thirdweb-dev/react';
-import { useState, useEffect } from 'react';
+import { useAddress, useMetamask, useEditionDrop, useToken } from '@thirdweb-dev/react';
+import { useState, useEffect, useMemo } from 'react';
 
 const App = () => {
   // Use the hooks thirdweb give us.
@@ -9,9 +9,61 @@ const App = () => {
 
   // Initalize editionDrop
   const editionDrop = useEditionDrop("0x2E25f3157043E011400eEe7269C01014e13D51DC");
+  // Initalize Token
+  const token = useToken("0xBaeEcc5BAD9Fe7AcC4E1CF5E081435f9156a8cAF");
   // State variable to check if user has the NFT;
   const [hasClaimedNFT, setHasClaimedNFT] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+
+  const [memberTokenAmounts, setMemberTokenAmounts] = useState([]);
+  const [memberAddresses, setMemberAddresses] = useState([]);
+
+  const shortenAddress = (str) => {
+    return str.substring(0,6) + "..." + str.substring(str.length - 4);
+  };
+
+  useEffect(() => {
+    if (!hasClaimedNFT) {
+      return;
+    }
+    
+    const getAllAddresses = async () => {
+      try {
+        const memberAddresses = await editionDrop.history.getAllClaimerAddresses(0);
+        console.log("Member addresses", memberAddresses);
+      } catch (err) {
+        console.error("failed to get member list", err);
+      }
+    };
+    getAllAddresses();
+  }, [hasClaimedNFT, editionDrop.history]);
+
+  const memberList = useMemo(() => {
+    return memberAddresses.map((address) => {
+      const member = memberTokenAmounts?.find(({ holder }) => holder === address);
+
+      return {
+        address,
+        tokenAmount: member?.balance.displayValue || "0",
+      }
+    });
+  }, [memberAddresses, memberTokenAmounts]);
+
+  useEffect(() => {
+    if (!hasClaimedNFT) {
+      return;
+    }
+
+    const getAllBalances = async () => {
+      try {
+        const amounts = await token.history.getAllHolderBalances();
+        setMemberTokenAmounts("Amounts", amounts);
+      } catch (err) {
+        console.error("failed to get member balances", err);
+      }
+    };
+    getAllBalances();
+  }, [hasClaimedNFT, token.history]);
 
   useEffect(() => {
     // If they don't have a connected wallet... EXIT!
@@ -63,12 +115,37 @@ const App = () => {
     );
   }
 
-  // Add this little piece!
+
+
+// Membership Dashboard
 if (hasClaimedNFT) {
   return (
     <div className="member-page">
-      <h1>🍪DAO Member Page</h1>
+      <h1>PosterityDAO Member Page</h1>
       <p>Congratulations on being a member</p>
+      <div>
+        <div>
+          <h2>Member List</h2>
+          <table className="card">
+            <thead>
+              <tr>
+                <th>Address</th>
+                <th>Token Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {memberList.map((member) => {
+                return (
+                  <tr key={member.address}>
+                    <td>{shortenAddress(member.address)}</td>
+                    <td>{member.tokenAmount}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
